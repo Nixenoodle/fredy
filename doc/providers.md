@@ -7,7 +7,7 @@ platform into Fredy.
 > Always make sure the search results are sorted by **date**, so Fredy picks up the newest listings
 > first.
 
-## The 29 built-in providers
+## The 32 built-in providers
 
 **🇩🇪 Germany**
 
@@ -26,9 +26,103 @@ platform into Fredy.
 **🇪🇸 Spain · 🇮🇹 Italy · 🇵🇹 Portugal** · idealista
 **🇮🇹 Italy** · Subito · Tecnocasa · Tecnorete · Casa.it
 **🇫🇷 France** · leboncoin · SeLoger · Bien'ici
+**🇳🇱 Netherlands** · Pararius · Kamernet · Funda (experimental)
 
 If you run a portal Fredy does not cover yet, contributions are very welcome, see
 [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## Pararius
+
+Paste a rental search URL from either `pararius.nl` (Dutch) or `pararius.com` (English), for example
+`https://www.pararius.nl/huurwoningen/amsterdam` or
+`https://www.pararius.com/apartments/amsterdam`. Set the portal's sorting to **newest first** and copy
+the search URL, including any price, room, furnishing or other filters. Fredy starts at the first
+page and follows the next-page links, keeping the search filters and reading up to 100 pages per
+run. Promoted adverts repeated on several pages are included only once. If a later page is blocked,
+the listings already collected are kept and the log warns that the search was incomplete. Narrow
+searches larger than 100 pages to collect the rest.
+
+Both sites are fetched through Fredy's existing browser, since plain HTTP requests can receive a
+Cloudflare challenge. No account, API key or extra dependency is needed. Browser access was verified
+on both domains, but may still be blocked for a particular server/IP; see the proxy guidance below.
+Fredy does not solve interactive CAPTCHAs. Availability checks also use the browser; a blocked or
+unrecognised page is treated as unknown, not as proof that the advert was removed.
+
+The provider reads the advertised rent, living area, total room count (not bedrooms), street,
+postcode, city and preview photo. Descriptions are fetched for new adverts using the same browser.
+Maps and geocoding use the Netherlands automatically. The price is the advertised figure, not a
+guarantee of an all-inclusive rent. This integration does not provide price tracking.
+
+## Kamernet
+
+Paste a **list-view search URL** from `kamernet.nl`, in Dutch or English, for example:
+
+- Rooms: `https://kamernet.nl/en/for-rent/room-rotterdam?radius=1`
+- All property types: `https://kamernet.nl/en/for-rent/properties-rotterdam?radius=1`
+- Dutch rooms: `https://kamernet.nl/huren/kamer-rotterdam?radius=1`
+
+Copy the URL after setting the filters on Kamernet. The site encodes some filters as dropdown
+indices, not literal values: `maxRent=10` means €1000, not €10, and `maxRent=1000` is not a valid
+€1000 filter. The search includes whatever radius the portal sets (so a search can include nearby
+towns). Fredy passes the portal's filters through, enforces newest-first sorting, starts at page
+one and reads every result page up to a 100-page safety limit. Promoted duplicates are included once;
+the separate nearby-property recommendations are not included. Map-view URLs are not supported.
+
+Kamernet currently serves public listings as structured data in its pages, so **no browser, account
+or API key is needed** for this provider's requests. For each new listing, Fredy fetches the public
+description, address, postcode coordinates and photo gallery. It also supports availability checks
+and price tracking. The rent is the advertised amount, with the portal's utilities-included flag
+preserved; an apartment's room count stays unknown unless stated, rather than guessing it from the
+bedroom count. Postcode coordinates are approximate, not the location of the front door.
+
+Progress appears in the logs as `Kamernet: page ...`, including the unique count and portal total.
+If a later page fails, collected listings are retained and a warning identifies the incomplete
+search. This does not bypass Kamernet's paid messaging or other account restrictions: contacting
+landlords still happens on Kamernet under its usual rules.
+
+## Funda (experimental)
+
+> [!WARNING]
+> Funda can reject VPN/proxy exits even when an established browser session still loads it. A fresh
+> stock Firefox profile successfully fetched a filtered Rotterdam search without Mullvad; Chromium
+> and ordinary HTTP were refused. The Firefox-enabled Docker image launches correctly, but live
+> access through the tested Mullvad exit remained blocked. Keep the experimental label until your
+> deployment's browser and network are verified together. No private browser session is imported.
+
+Select **Funda (experimental)** and paste a current list-view search URL, for example
+`https://www.funda.nl/zoeken/huur?selected_area=rotterdam` or
+`https://www.funda.nl/zoeken/koop?selected_area=rotterdam`. Keep the portal's price, area and other
+filters in the URL. Map URLs, grouped projects and legacy `/huur/rotterdam/` URLs are not supported;
+use the current individual-advert search instead.
+
+The provider uses **stock Firefox**, sorts newest first and walks up to 100 pages (15 results
+per page), starting at page one even if another page was pasted. Progress appears as `Funda: page
+...`. An initial block fails explicitly; a later failure keeps collected listings and logs an
+incomplete-search warning. There is no interactive CAPTCHA solving and no access to your personal
+browser profile, cookies or credentials. Puppeteer creates a temporary profile for each browser run.
+Other providers continue using CloakBrowser/Chromium; jobs and background probes share browsers only
+within the same engine, and close both engines when the run finishes.
+
+**Docker:** rebuild with `docker compose up -d --build`; the Dockerfile installs `firefox-esr`.
+**Native Node.js:** install Firefox or Firefox ESR. If it is not found in a standard location, set
+`FREDY_FIREFOX_EXECUTABLE` to its executable, not a profile directory. No extra npm package is needed.
+The global proxy setting is preserved: HTTP and SOCKS5 proxies without authentication are supported
+for Firefox; unsupported/authenticated proxy configurations fail explicitly, never fall back to a
+direct connection. VPN routing still applies to the process regardless of that setting.
+
+If toggling a VPN leaves Docker using an unreachable VPN DNS server, recreate Fredy with
+`docker compose up -d --force-recreate fredy` after choosing the intended network route. Rebuilding
+alone does not fix VPN-exit blocks, and a working DNS resolver does not guarantee Funda accepts an IP.
+
+Search records supply advertised prices, total rooms (not bedrooms), size, address, publication
+time and gallery URLs. When detail fetching is enabled for Funda in your user settings, new adverts
+are enriched with descriptions, coordinates and build year where available. Availability and price
+checks use the browser too. A challenge is unknown, not
+proof that an advert was removed. Canonical URLs are deliberately not substituted for search
+links, because Funda can give the same advert different ids in the two places.
+
+Only reduced public listing fields are included in test fixtures. User-provided browser snapshots
+are not loaded at runtime and do not become a second, permanently stale listing source.
 
 ## Immoscout
 

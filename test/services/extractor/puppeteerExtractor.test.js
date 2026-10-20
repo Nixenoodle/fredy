@@ -13,6 +13,9 @@ vi.mock('cloakbrowser/puppeteer', () => ({
   launch: launchMock,
 }));
 
+const { firefoxMock } = vi.hoisted(() => ({ firefoxMock: vi.fn() }));
+vi.mock('../../../lib/services/extractor/firefoxBrowser.js', () => ({ launchFirefox: firefoxMock }));
+
 const { launchBrowser, closeBrowser } = await import('../../../lib/services/extractor/puppeteerExtractor.js');
 
 /**
@@ -54,6 +57,13 @@ describe('launchBrowser proxy forwarding', () => {
 
     expect(launchMock).toHaveBeenCalledTimes(1);
     expect(launchMock.mock.calls[0][0].proxy).toBeUndefined();
+  });
+
+  it('uses Firefox only when the provider explicitly requests it', async () => {
+    const options = { browserEngine: 'firefox', proxyUrl: 'http://proxy.example:8080' };
+    await launchBrowser('https://www.funda.nl/', options);
+    expect(firefoxMock).toHaveBeenCalledWith(options);
+    expect(launchMock).not.toHaveBeenCalled();
   });
 });
 

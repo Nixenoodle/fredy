@@ -151,6 +151,14 @@ export async function readFixture(url, options) {
     return detailProvider == null ? null : tryReadFile(path.join(FIXTURES_DIR, `${detailProvider}_detail.html`));
   }
 
+  if (
+    providerName === 'kamernet' &&
+    providerListPath[providerName] === pathname &&
+    new URL(url).searchParams.get('pageNo') === '2'
+  ) {
+    return tryReadFile(path.join(FIXTURES_DIR, 'kamernet_page2.html'));
+  }
+
   // The tecnocasa group numbers its result pages in the path, so every page of a walk has to read
   // as the search page it is - otherwise page two is served the detail fixture and the walk ends on
   // the wrong reason.
@@ -203,6 +211,7 @@ export async function readLeboncoinFixtures() {
 
 /** Hosts whose providers request their pages themselves instead of going through the extractor. */
 const FETCHED_PAGE_HOSTS = [
+  'kamernet.nl',
   'subito.it',
   'www.idealista.it',
   'www.idealista.com',

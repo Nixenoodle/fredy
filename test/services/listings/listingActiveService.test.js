@@ -267,6 +267,15 @@ describe('services/listings/listingActiveService', () => {
       expect(state.launches[0]).toMatchObject({ proxyUrl: 'http://proxy.example:8080' });
     });
 
+    it('honors the provider engine for availability checks', async () => {
+      state.due = [listing('alive')];
+      const runActiveChecker = await loadService(undefined, { ...browserConfig(), browserEngine: 'firefox' });
+      await runActiveChecker();
+      expect(state.launches).toHaveLength(1);
+      expect(state.launches[0]).toMatchObject({ browserEngine: 'firefox' });
+      expect(state.closed).toEqual([state.browser]);
+    });
+
     it('closes the browser when a probe throws, and counts the throw as a failure', async () => {
       state.due = [listing('boom')];
       const runActiveChecker = await loadService(undefined, {

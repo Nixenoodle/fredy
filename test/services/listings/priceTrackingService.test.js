@@ -40,8 +40,9 @@ async function loadService() {
       state.concurrent -= 1;
       return state.html[url] ?? null;
     },
-    launchBrowser: async () => {
+    launchBrowser: async (_url, options) => {
       state.launches += 1;
+      state.launchOptions.push(options);
       return { id: 'browser' };
     },
     closeBrowser: async () => {
@@ -89,6 +90,7 @@ beforeEach(() => {
     notified: [],
     html: {},
     launches: 0,
+    launchOptions: [],
     closes: 0,
     concurrent: 0,
     maxConcurrent: 0,
@@ -99,6 +101,34 @@ beforeEach(() => {
 });
 
 describe('services/listings/priceTrackingService', () => {
+  it('shares only compatible engines when Chromium and Firefox probes run together', async () => {
+    state.settings.proxyUrl = 'http://proxy.example:8080';
+    state.due = [listing('chrome'), listing('firefox', 'funda')];
+    state.html['https://example.com/chrome'] = '<div class="price">1190</div>';
+    state.providers = [
+      markupProvider,
+      {
+        metaInformation: { id: 'funda' },
+        config: { browserEngine: 'firefox', priceTracking: { browserProbe: async () => 1000 } },
+      },
+    ];
+    const run = await loadService();
+    await run();
+    expect(state.launchOptions).toEqual(
+      expect.arrayContaining([
+        { proxyUrl: 'http://proxy.example:8080' },
+        { proxyUrl: 'http://proxy.example:8080', browserEngine: 'firefox' },
+      ]),
+    );
+    expect(state.launches).toBe(2);
+    expect(state.closes).toBe(2);
+    expect(state.recorded).toEqual(
+      expect.arrayContaining([
+        ['chrome', 1190],
+        ['firefox', 1000],
+      ]),
+    );
+  });
   it('does nothing at all while the setting is off', async () => {
     state.settings.priceTrackingEnabled = false;
     state.due = [listing('a')];

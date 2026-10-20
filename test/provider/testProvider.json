@@ -1,4 +1,16 @@
 {
+  "funda": {
+    "url": "https://www.funda.nl/zoeken/huur?selected_area=rotterdam",
+    "enabled": true
+  },
+  "kamernet": {
+    "url": "https://kamernet.nl/en/for-rent/properties-rotterdam?radius=1",
+    "enabled": true
+  },
+  "pararius": {
+    "url": "https://www.pararius.com/apartments/amsterdam",
+    "enabled": true
+  },
   "einsAImmobilien": {
     "url": "https://www.1a-immobilienmarkt.de/suchen/duesseldorf/wohnung-kaufen.html?search=yes&cfid=98b39c7e-b403-4764-8f3c-57bf590923d0&data_hash=f46f89548257740094dd708996adcd68&sort_type=newest",
     "enabled": true,

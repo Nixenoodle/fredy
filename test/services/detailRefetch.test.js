@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * `vi.mock` is hoisted above the imports, so the factories may not close over anything declared
  * below them - hence the mutable holder, which the tests fill in per case.
  */
-const state = { providers: [], launched: 0, closed: 0 };
+const state = { providers: [], launched: 0, closed: 0, launchOptions: [] };
 
 vi.mock('../../lib/utils.js', async (importOriginal) => {
   const actual = await importOriginal();
@@ -19,8 +19,9 @@ vi.mock('../../lib/utils.js', async (importOriginal) => {
 });
 
 vi.mock('../../lib/services/extractor/puppeteerExtractor.js', () => ({
-  launchBrowser: async () => {
+  launchBrowser: async (_url, options) => {
     state.launched++;
+    state.launchOptions.push(options);
     return { fake: true };
   },
   closeBrowser: async () => {
@@ -74,6 +75,7 @@ beforeEach(() => {
   state.providers = [];
   state.launched = 0;
   state.closed = 0;
+  state.launchOptions = [];
 });
 
 describe('rowToParsedListing', () => {
@@ -97,6 +99,14 @@ describe('rowToParsedListing', () => {
 });
 
 describe('refetchListingDetails', () => {
+  it('uses the provider engine for a manual detail refetch', async () => {
+    const provider = providerModule('testportal', async (listing) => ({ ...listing, description: 'Firefox detail' }));
+    provider.config.browserEngine = 'firefox';
+    state.providers = [provider];
+    expect((await refetchListingDetails(row)).status).toBe('updated');
+    expect(state.launchOptions).toEqual([{ proxyUrl: null, browserEngine: 'firefox' }]);
+    expect(state.closed).toBe(1);
+  });
   it('says so plainly when the portal has no detail page to read', async () => {
     state.providers = [providerModule('testportal', null)];
 

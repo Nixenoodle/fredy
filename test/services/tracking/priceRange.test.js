@@ -21,6 +21,16 @@ const configOf = (id) => providers.find((provider) => provider.metaInformation.i
  * says, and a portal that renames one should fail here rather than quietly report no band.
  */
 const RECORDED_SEARCHES = [
+  ['funda', 'https://www.funda.nl/zoeken/huur?selected_area=rotterdam&price=1500-2000', { min: 1500, max: 2000 }],
+  [
+    'funda',
+    'https://www.funda.nl/zoeken/koop?selected_area=rotterdam&price=300000-500000',
+    { min: 300000, max: 500000 },
+  ],
+  ['kamernet', 'https://kamernet.nl/en/for-rent/room-rotterdam?radius=1&maxRent=10', { min: null, max: 1000 }],
+  ['kamernet', 'https://kamernet.nl/huren/appartement-amsterdam?maxRent=17', { min: null, max: 2000 }],
+  ['pararius', 'https://www.pararius.nl/huurwoningen/amsterdam/1000-2000', { min: 1000, max: 2000 }],
+  ['pararius', 'https://www.pararius.com/apartments/amsterdam/1000-2000/2-bedrooms', { min: 1000, max: 2000 }],
   [
     'deutscheWohnen',
     'https://www.deutsche-wohnen.com/mieten/mietangebote?rentType=miete&city=Berlin&immoType=wohnung&priceMin=500&priceMax=1000&minRooms=Beliebig&balcony=egal',

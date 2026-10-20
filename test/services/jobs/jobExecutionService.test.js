@@ -58,7 +58,7 @@ describe('services/jobs/jobExecutionService', () => {
     vi.doMock(puppeteerPath, () => ({
       launchBrowser: async (...args) => {
         calls.launchBrowser.push(args);
-        return state.browser;
+        return state.browsers?.[args[1]?.browserEngine ?? 'chromium'] ?? state.browser;
       },
       closeBrowser: async (browser) => {
         calls.closeBrowser.push(browser);
@@ -212,6 +212,36 @@ describe('services/jobs/jobExecutionService', () => {
     expect(calls.launchBrowser).toEqual([['https://api.example/', {}]]);
     expect(calls.pipeline.map(({ browser }) => browser)).toEqual([state.browser, state.browser, state.browser]);
     expect(calls.closeBrowser).toEqual([state.browser]);
+  });
+
+  it('keeps Firefox separate from Chromium in a mixed-provider job and preserves the proxy', async () => {
+    const chrome = { connected: true, engine: 'chromium' };
+    const firefox = { connected: true, engine: 'firefox' };
+    state.browsers = { chromium: chrome, firefox };
+    state.providers = [
+      ['chrome-one', undefined],
+      ['funda', 'firefox'],
+      ['firefox-two', 'firefox'],
+      ['chrome-two', undefined],
+    ].map(([id, browserEngine]) => ({
+      metaInformation: { id },
+      createConfig: () => ({ url: `https://${id}.example/`, ...(browserEngine ? { browserEngine } : {}) }),
+    }));
+    state.jobsById.j1 = {
+      id: 'j1',
+      enabled: true,
+      userId: 'u1',
+      provider: state.providers.map((provider) => ({ id: provider.metaInformation.id })),
+    };
+    await initService({ proxyUrl: 'http://proxy.example:8080' });
+    bus.emit('jobs:runOne', { jobId: 'j1' });
+    await vi.waitFor(() => expect(calls.markFinished).toEqual(['j1']));
+    expect(calls.launchBrowser).toEqual([
+      ['https://chrome-one.example/', { proxyUrl: 'http://proxy.example:8080' }],
+      ['https://funda.example/', { proxyUrl: 'http://proxy.example:8080', browserEngine: 'firefox' }],
+    ]);
+    expect(calls.pipeline.map(({ browser }) => browser)).toEqual([chrome, firefox, firefox, chrome]);
+    expect(calls.closeBrowser).toEqual([chrome, firefox]);
   });
 
   describe('onboarding tour', () => {

@@ -5,7 +5,7 @@
 # "libm.so.6: version `GLIBC_2.38' not found".
 FROM node:22-trixie-slim
 
-# System deps for CloakBrowser + build tools for native modules (better-sqlite3)
+# CloakBrowser for most portals, stock Firefox ESR for Funda, plus native-module build tools.
 # NOTE: trixie renamed several libs as part of the 64-bit time_t transition
 # (libasound2 -> libasound2t64 etc.) - keep the t64 suffixes.
 # fonts-* packages below are CloakBrowser's recommended Linux font set
@@ -17,7 +17,7 @@ FROM node:22-trixie-slim
 # resulting CLOAKBROWSER_SUPPRESS_FONT_WARNING startup notice is expected.
 # tini is the container's init (see ENTRYPOINT below) and must survive the build-tool purge.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates tini fonts-liberation libasound2t64 \
+    curl ca-certificates tini firefox-esr fonts-liberation libasound2t64 \
     libatk-bridge2.0-0t64 libatk1.0-0t64 libcups2t64 libdbus-1-3 \
     libdrm2 libgbm1 libgtk-3-0t64 libnspr4 libnss3 \
     libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 xdg-utils \

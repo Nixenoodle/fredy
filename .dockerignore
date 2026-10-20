@@ -20,6 +20,12 @@ conf/
 # Testing
 test/
 
+# Browser-saved diagnostic pages and their downloaded third-party assets
+funda-search.html
+funda-detail.html
+funda-search_files/
+funda-detail_files/
+
 # Documentation
 doc/
 *.md

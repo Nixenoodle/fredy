@@ -52,12 +52,12 @@ describe('the order providers are offered in', () => {
 
   it('sorts a country nobody ranked behind every country that is ranked', () => {
     const sorted = sortProviders([
-      provider('dutch', 'Een Portaal', ['nl']),
+      provider('unknown', 'An Unknown Portal', ['xx']),
       provider('flatfox', 'Flatfox', ['ch']),
       provider('immoscout', 'Immoscout', ['de']),
     ]);
 
-    expect(sorted.map((p) => p.id)).toEqual(['immoscout', 'flatfox', 'dutch']);
+    expect(sorted.map((p) => p.id)).toEqual(['immoscout', 'flatfox', 'unknown']);
   });
 
   it('leaves the array it was given alone', () => {
@@ -110,14 +110,14 @@ describe('the flag of a country', () => {
 });
 
 describe('the providers Fredy actually ships', () => {
-  it('come out German first, then Austrian, Swiss, Spanish, Italian and French', async () => {
+  it('come out German first, then Austrian, Swiss, Spanish, Italian, French and Dutch', async () => {
     const metas = (await getProviders()).map((p) => p.metaInformation);
     const countries = sortProviders(metas).map(groupCountryOf);
     const ranks = countries.map((code) => COUNTRY_ORDER.indexOf(code));
 
     expect(ranks, `every shipped country needs a rank in COUNTRY_ORDER: ${countries.join(', ')}`).not.toContain(-1);
     expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
-    expect(new Set(countries)).toEqual(new Set(['de', 'at', 'ch', 'es', 'it', 'fr']));
+    expect(new Set(countries)).toEqual(new Set(['de', 'at', 'ch', 'es', 'it', 'fr', 'nl']));
   });
 
   it('lead with ImmoScout24, Immowelt and Kleinanzeigen', async () => {
